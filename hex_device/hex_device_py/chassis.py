@@ -32,10 +32,10 @@ class Chassis(DeviceBase, MotorBase):
     """
 
     SUPPORTED_ROBOT_TYPES = [
-        public_api_types_pb2.RobotType.RtTriggerA3,
-        public_api_types_pb2.RobotType.RtCustomPcwVehicle,
-        public_api_types_pb2.RobotType.RtMaverX4,
-        public_api_types_pb2.RobotType.RtArk2LrDriver,
+        public_api_types_pb2.RobotType.RtTriggerA3Lr1,
+        public_api_types_pb2.RobotType.RtMaverX4D,
+        public_api_types_pb2.RobotType.RtMaverL4D,
+        public_api_types_pb2.RobotType.RtArk2Lr1,
     ]
 
     def __init__(self,
@@ -391,6 +391,8 @@ class Chassis(DeviceBase, MotorBase):
             # Get position from queue
             if pop:
                 x, y, yaw = self._vehicle_position.popleft()
+                # get once in order to sync deque length.
+                self._get_motor_motion_data()
             else:
                 x, y, yaw = self._vehicle_position[-1]
             

@@ -24,7 +24,7 @@ class ArmConfig:
         self.arm_motor_map = {
             public_api_types_pb2.RobotType.RtArmSaberD6x: 6,
             public_api_types_pb2.RobotType.RtArmSaberD7x: 7,
-            public_api_types_pb2.RobotType.RtArmArcherY6D_V1: 6,
+            public_api_types_pb2.RobotType.RtArmArcherD6Y_P1: 6,
             public_api_types_pb2.RobotType.RtArmArcherY6L_V1: 6,
         }
 
@@ -341,8 +341,15 @@ def main():
     time.sleep(0.2)
 
     
-    # Start arm  
-    api.arm.start()
+    # Start arm
+    while True:
+        if api.arm._my_session_id == api.arm.get_session_holder():
+            api.ros_interface.logi("Arm is ready to control.")
+            break
+        else:
+            api.arm.start()
+        time.sleep(0.1)
+
     while api.arm is not None and api._is_init and not shutdown_event.is_set():
         # Initial pose control
         if api.init_pose is not None and isinstance(api.init_pose, list):

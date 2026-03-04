@@ -26,9 +26,13 @@ class HexChassisApi:
     """
 
     def __init__(self):
-        self.ros_interface = DataInterface(name="xnode_chassis", rate_hz=1000)
+        # 1. Create ROS interface
+        self.ros_interface = DataInterface(name="xnode_chassis", rate_hz=500)
         self.ros_interface.set_rate(10)
+        self._watchdog_check_every = max(1, int(self.ros_interface.get_rate() / 10.0))
+        self._watchdog_counter = 0
 
+        # 2. Get parameters
         self.ros_interface.set_parameter('frame_id', 'base_link')
         self.frame_id = self.ros_interface.get_parameter('frame_id')
         self.ros_interface.set_parameter('simple_mode', True)
@@ -36,10 +40,8 @@ class HexChassisApi:
         self.ros_interface.set_parameter('cmd_vel_timeout', 0.5)
         self._cmd_vel_timeout = float(self.ros_interface.get_parameter('cmd_vel_timeout') or 0.5)
         self._last_cmd_vel_time = 0.0  # 0 = never received, then use timeout to stop
-        # 10Hz 看门狗：根据初始化时的 rate 计算一次，后续当作常量使用
-        self._watchdog_check_every = max(1, int(self.ros_interface.get_rate() / 10.0))
-        self._watchdog_counter = 0
 
+        # 3. Create shared topics (ws_down, ws_up)
         self.ws_down_pub = self.ros_interface.create_publisher('ws_down', UInt8MultiArray, 10)
         self.ws_up_sub = self.ros_interface.create_subscription(
             'ws_up', UInt8MultiArray, self._ws_up_callback, 10)
@@ -51,6 +53,7 @@ class HexChassisApi:
         self.cmd_vel_sub = None
         self.clear_err_sub = None
 
+        # 4. Init HexDeviceApi
         self.api = HexDeviceApi(control_hz=500, send_down_callback=self._pub_ws_down)
         self.version_check = False
         self.first_time = True

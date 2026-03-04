@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 from glob import glob
 
-package_name = 'hex_device'
+package_name = 'hex_device_ros'
 
 def get_files(tar: str, src: str):
     all_paths = glob(f'{src}/*')
@@ -30,16 +30,17 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='weekleaf',
-    maintainer_email='2375899670@qq.com',
+    maintainer='Jecjune',
+    maintainer_email='zejun.chen@hexfellow.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            "arm_trans = hex_device.arm_trans:main",
-            "chassis_trans = hex_device.chassis_trans:main",
-            "chassis_key_control = hex_device.chassis_key_control:main",
-            "pub_xmsg = hex_device.pub_xmsg:main"
+            "arm_trans = hex_device_ros.arm_trans:main",
+            "chassis_trans = hex_device_ros.chassis_trans:main",
+            "chassis_key_control = hex_device_ros.chassis_key_control:main",
+            "pub_xmsg = hex_device_ros.pub_xmsg:main",
+            "hex_base_controller_ros = hex_device_ros.hex_base_controller_ros:main",
         ],
     },
 )

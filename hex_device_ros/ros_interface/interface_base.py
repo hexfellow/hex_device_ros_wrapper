@@ -9,7 +9,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Callable
 from typing import Optional, Tuple, List, Dict, Any, Union
-from hex_device_py import Arm, Hands, CommandType, MitMotorCommand, MotorBase
+from hex_device import Arm, Hands, CommandType, MitMotorCommand, MotorBase
 
 
 class InterfaceBase(ABC):
@@ -118,6 +118,11 @@ class InterfaceBase(ABC):
         Args:
             hz: Frequency (Hz)
         """
+        pass
+
+    @abstractmethod
+    def get_rate(self) -> float:
+        """Return current loop rate in Hz. Override if backend stores rate."""
         pass
 
     @abstractmethod

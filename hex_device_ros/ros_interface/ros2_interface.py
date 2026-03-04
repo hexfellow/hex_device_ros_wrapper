@@ -14,7 +14,7 @@ class DataInterface(InterfaceBase):
     ROS2 interface implementation
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, rate_hz: float = 100.0):
         super(DataInterface, self).__init__(name=name)
 
         # Initialize ROS2 node
@@ -23,7 +23,8 @@ class DataInterface(InterfaceBase):
         self.__logger = self.__node.get_logger()
 
         # Initialize rate control
-        self._rate = self.__node.create_rate(100)
+        self._rate_hz = rate_hz
+        self._rate = self.__node.create_rate(self._rate_hz)
 
         # Start spin thread
         self.__spin_thread = threading.Thread(target=self.spin)
@@ -140,9 +141,14 @@ class DataInterface(InterfaceBase):
             hz: Frequency (Hz)
         """
         try:
-            self._rate = self.__node.create_rate(hz)
+            self._rate_hz = float(hz)
+            self._rate = self.__node.create_rate(self._rate_hz)
         except Exception as e:
             self.loge(f"Failed to set rate: {e}")
+
+    def get_rate(self) -> float:
+        """Return current loop rate in Hz."""
+        return self._rate_hz
 
     def sleep(self):
         """Sleep according to rate"""

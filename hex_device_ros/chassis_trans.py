@@ -10,8 +10,7 @@ script_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(script_path)
 
 from ros_interface import DataInterface
-from hex_device import HexDeviceApi, public_api_up_pb2
-from hex_device import Chassis
+from hex_device import HexDeviceApi, public_api_up_pb2, Chassis
 from hex_device.motor_base import CommandType
 
 from geometry_msgs.msg import Twist
@@ -28,8 +27,8 @@ class HexChassisApi:
     def __init__(self):
         # 1. Create ROS interface
         self.ros_interface = DataInterface(name="xnode_chassis", rate_hz=500)
-        self.ros_interface.set_rate(10)
-        self._watchdog_check_every = max(1, int(self.ros_interface.get_rate() / 10.0))
+        # Timeout check every 10Hz
+        self._watchdog_check_every = max(1, int(0.1 * self.ros_interface.get_rate()))
         self._watchdog_counter = 0
 
         # 2. Get parameters
@@ -40,6 +39,9 @@ class HexChassisApi:
         self.ros_interface.set_parameter('cmd_vel_timeout', 0.5)
         self._cmd_vel_timeout = float(self.ros_interface.get_parameter('cmd_vel_timeout') or 0.5)
         self._last_cmd_vel_time = 0.0  # 0 = never received, then use timeout to stop
+
+        self.version_check = False
+        self.first_time = True
 
         # 3. Create shared topics (ws_down, ws_up)
         self.ws_down_pub = self.ros_interface.create_publisher('ws_down', UInt8MultiArray, 10)
@@ -55,8 +57,6 @@ class HexChassisApi:
 
         # 4. Init HexDeviceApi
         self.api = HexDeviceApi(control_hz=500, send_down_callback=self._pub_ws_down)
-        self.version_check = False
-        self.first_time = True
 
     # ========== Common topic callbacks ==========
 
@@ -75,13 +75,14 @@ class HexChassisApi:
         except Exception:
             self.ros_interface.logw("Failed to parse ws_up message")
             return
-        # 目前底盘暂不需要进行版本检查
+        # # 目前底盘暂不需要进行版本检查
         # if not self.version_check:
         #     self.version_check = True
         #     if not self.api._is_support_version(api_up):
-        #         self.ros_interface.loge("Version mismatch: Chassis API is not supported")
+        #         self.ros_interface.loge("Version mismatch, API closed")
         #         self.api.close()
         #         self.ros_interface.shutdown()
+        #         return
         self.api._process_api_up(api_up)
 
     # ========== Chassis-specific topic setup ==========
@@ -129,9 +130,10 @@ class HexChassisApi:
         except Exception as e:
             print(f"Error in cmd_vel_callback: {e}")
 
-    def _check_cmd_vel_timeout(self, chassis):
+    def _check_cmd_timeout(self, chassis):
         """When no cmd_vel for timeout seconds, stop chassis (watchdog)."""
         if chassis.is_timeout():
+            self.ros_interface.logw("Chassis command timeout, stopping chassis...")
             chassis.stop()
 
     def _clear_err_callback(self, msg):
@@ -208,7 +210,7 @@ def main():
                     hex_chassis_api._watchdog_counter += 1
                     if hex_chassis_api._watchdog_counter >= hex_chassis_api._watchdog_check_every:
                         hex_chassis_api._watchdog_counter = 0
-                        hex_chassis_api._check_cmd_vel_timeout(device)
+                        hex_chassis_api._check_cmd_timeout(device)
 
             hex_chassis_api.ros_interface.sleep()
 

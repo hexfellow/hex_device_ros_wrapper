@@ -12,25 +12,52 @@ from hex_device_msgs.msg import XmsgArmJointParam, XmsgArmJointParamList
 class XmsgInterface:
     def __init__(self, node_name: str):
         self.data_interface = DataInterface(node_name)
-        self._joints_cmd_pub = self.data_interface.create_publisher("/joints_cmd", XmsgArmJointParamList)
+        # If you want to publish to the arm, use this publisher
+        # self._joints_cmd_pub = self.data_interface.create_publisher("/joints_cmd", XmsgArmJointParamList)
+
+        # If you want to publish to the gripper, use this publisher
+        self._joints_cmd_pub = self.data_interface.create_publisher("/gripper_cmd", XmsgArmJointParamList)
+
 
     def pub_joints_cmd(self):
         msg = XmsgArmJointParamList(
             joints=[
-                XmsgArmJointParam(mode="mit_mode", position=-0.3, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 12.0}"),
-                XmsgArmJointParam(mode="mit_mode", position=-1.48, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 12.0}"),
-                XmsgArmJointParam(mode="mit_mode", position=2.86, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 12.0}"),
-                XmsgArmJointParam(mode="mit_mode", position=0.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 12.0}"),
-                XmsgArmJointParam(mode="mit_mode", position=0.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 39.0, \"mit_kd\": 0.8}"),
-                XmsgArmJointParam(mode="mit_mode", position=0.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 39.0, \"mit_kd\": 0.8}"),
+                # # For arm
+                # XmsgArmJointParam(mode="mit_mode", position=-0.3, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 5.0}"),
+                # XmsgArmJointParam(mode="mit_mode", position=-1.48, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 5.0}"),
+                # XmsgArmJointParam(mode="mit_mode", position=2.86, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 5.0}"),
+                # XmsgArmJointParam(mode="mit_mode", position=0.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 150.0, \"mit_kd\": 5.0}"),
+                # XmsgArmJointParam(mode="mit_mode", position=0.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 100.0, \"mit_kd\": 2.0}"),
+                # XmsgArmJointParam(mode="mit_mode", position=0.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 100.0, \"mit_kd\": 2.0}"),
+
                 # XmsgArmJointParam(mode="position", position=-0.3, velocity=0.0, effort=0.0, extra_param=""),
                 # XmsgArmJointParam(mode="position", position=-1.48, velocity=0.0, effort=0.0, extra_param=""),
                 # XmsgArmJointParam(mode="position", position=2.86, velocity=0.0, effort=0.0, extra_param=""),
                 # XmsgArmJointParam(mode="position", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
                 # XmsgArmJointParam(mode="position", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
                 # XmsgArmJointParam(mode="position", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+
+                # XmsgArmJointParam(mode="velocity", position=-0.3, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="velocity", position=-1.48, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="velocity", position=2.86, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="velocity", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="velocity", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="velocity", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+
+                # XmsgArmJointParam(mode="effort", position=-0.3, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="effort", position=-1.48, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="effort", position=2.86, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="effort", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="effort", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+                # XmsgArmJointParam(mode="effort", position=0.0, velocity=0.0, effort=0.0, extra_param=""),
+
+                # # For gripper
+                XmsgArmJointParam(mode="position", position=1.2, velocity=0.0, effort=0.0, extra_param=""),
+
+                # XmsgArmJointParam(mode="mit_mode", position=1.2, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 100.0, \"mit_kd\": 2.0}"),
             ]
         )
+        print(f"Publishing joints cmd: {msg}")
         self.data_interface.publish(self._joints_cmd_pub, msg)
 
 def main():

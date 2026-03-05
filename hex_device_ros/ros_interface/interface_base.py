@@ -199,13 +199,13 @@ class InterfaceBase(ABC):
         if device is None:
             self.logw(f"{device_name.capitalize()} not initialized.")
             return
-        
+
         motor_count = len(device)
         
+        # Check whether the message is complete
         if not hasattr(msg, 'joints') or msg.joints is None:
             self.logw(f"XmsgArmJointParamList message has no joints for {device_name}.")
             return
-        
         length = len(msg.joints)
         if length != motor_count:
             self.logw(f"XmsgArmJointParamList message length {length} not match {device_name} motor count {motor_count}.")
@@ -295,11 +295,11 @@ class InterfaceBase(ABC):
         
         return None
     
-    def get_init_pose_config(self, json_path: str) -> Optional[Dict]:
-        """Load init pose configuration including init_pose and step_limits.
+    def get_init_pos_config(self, json_path: str) -> Optional[Dict]:
+        """Load init position configuration including init_pos.
         
         Returns:
-            Dict with keys 'init_pose' and 'step_limits' if successful, None otherwise
+            Dict with keys 'init_pos' if successful, None otherwise
         """
         try:
             with open(json_path, "r") as f:
@@ -307,20 +307,21 @@ class InterfaceBase(ABC):
                 if json_data is not None:
                     if isinstance(json_data, dict):
                         result = {}
-                        if 'init_pose' in json_data:
-                            result['init_pose'] = json_data['init_pose']
+                        if 'init_pos' in json_data:
+                            result['init_pos'] = json_data['init_pos']
                         if 'step_limits' in json_data:
                             result['step_limits'] = json_data['step_limits']
                         
                         if result:
-                            self.logi(f"Load init pose config from {json_path}: {list(result.keys())}")
+                            self.logi(f"Load init pos config from: {json_path}")
+                            self.logi(f"Config content: {json.dumps(result, indent=2)}")
                             return result
                         else:
-                            self.loge(f"Error: No 'init_pose' or 'step_limits' found in {json_path}.")
+                            self.loge(f"Error: No 'init_pos' found in {json_path}.")
                     elif isinstance(json_data, list):
-                        # Old format: just a list, treat as init_pose
-                        self.logi(f"Load init pose from {json_path} (legacy format).")
-                        return {'init_pose': json_data}
+                        # Old format: just a list, treat as init_pos
+                        self.logi(f"Load init pos from {json_path} (legacy format).")
+                        return {'init_pos': json_data}
                     else:
                         self.loge(f"Error: Expected dict or list in {json_path}, got {type(json_data).__name__}.")
         except FileNotFoundError:

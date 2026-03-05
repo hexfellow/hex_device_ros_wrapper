@@ -49,7 +49,7 @@ def generate_launch_description():
     )
     
     init_pose_file_path = FindPackageShare('hex_device_ros').find(
-        'hex_device_ros') + '/config/init_pose.json'
+        'hex_device_ros') + '/config/init_pos.json'
     init_pose_path = DeclareLaunchArgument(
         'init_pose_path',
         default_value=init_pose_file_path,
@@ -64,8 +64,8 @@ def generate_launch_description():
     
     arm_series = DeclareLaunchArgument(
         'arm_series',
-        default_value='16',
-        description='The series of the Archer (integer).'
+        default_value='0',
+        description='The series of the HexArm (integer).'
     )
 
     # Define the node

@@ -58,13 +58,13 @@ def generate_launch_description():
     
     gripper_type = DeclareLaunchArgument(
         'gripper_type',
-        default_value='0',
+        default_value='4',
         description='The type of the Gripper (integer).'
     )
     
     arm_series = DeclareLaunchArgument(
         'arm_series',
-        default_value='16',
+        default_value='25',
         description='The series of the Archer (integer).'
     )
 

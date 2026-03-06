@@ -26,6 +26,10 @@ class ArmConfig:
             public_api_types_pb2.RobotType.RtArmSaberD7x: 7,
             public_api_types_pb2.RobotType.RtArmArcherD6Y_P1: 6,
             public_api_types_pb2.RobotType.RtArmArcherY6L_V1: 6,
+            public_api_types_pb2.RobotType.RtArmArcherY6_H1: 6,
+            public_api_types_pb2.RobotType.RtArmFireflyY6_H1: 6,
+            public_api_types_pb2.RobotType.RtHelloArcherY6_H1: 6,
+            public_api_types_pb2.RobotType.RtHelloFireflyY6_H1: 6,
         }
 
 
@@ -35,6 +39,7 @@ class GripperConfig:
         self.gripper_motor_map = {
             public_api_types_pb2.SecondaryDeviceType.SdtUnknown: 0,
             public_api_types_pb2.SecondaryDeviceType.SdtHandGp100: 1,
+            public_api_types_pb2.SecondaryDeviceType.SdtHandGp80G1: 1,
         }
 
 class HexArmApi:

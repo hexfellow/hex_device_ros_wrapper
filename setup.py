@@ -40,7 +40,6 @@ setup(
             "chassis_trans = hex_device_ros_wrapper.chassis_trans:main",
             "chassis_key_control = hex_device_ros_wrapper.chassis_key_control:main",
             "pub_xmsg = hex_device_ros_wrapper.pub_xmsg:main",
-            "hex_base_controller_ros = hex_device_ros_wrapper.hex_base_controller_ros:main",
         ],
     },
 )

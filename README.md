@@ -13,35 +13,12 @@ git clone --recursive https://github.com/hexfellow/hex_bridge.git
 git clone --recursive https://github.com/hexfellow/hex_device_ros_wrapper.git
 git clone --recursive https://github.com/hexfellow/hex_device_msgs.git
 ```
-### 2. install protoc
-> If you are using Higher Ubuntu Release, likely your package manager has already installed `protoc`. As long as version is higher than 27.1, you can skip this step.
-
-Just choose a suitable version and install it. Here below is an example of installing `protoc-27.1`.
-```bash
-# For Linux x86_64
-wget https://github.com/protocolbuffers/protobuf/releases/download/v27.1/protoc-27.1-linux-x86_64.zip
-sudo unzip protoc-27.1-linux-x86_64.zip -d /usr/local
-rm protoc-27.1-linux-x86_64.zip  
-
-# For Linux arm64
-wget https://github.com/protocolbuffers/protobuf/releases/download/v27.1/protoc-27.1-linux-aarch_64.zip
-sudo unzip protoc-27.1-linux-aarch_64.zip -d /usr/local
-rm protoc-27.1-linux-aarch_64.zip  
-
-#  Verify installation
-protoc --version  # Should show libprotoc 27.1
-```
-### 3. Install dependencies
+### 2. Install dependencies
 ```bash
 cd ~/hex_ws/src/hex_device_ros_wrapper/
 python3 -m pip install -r requirements.txt
 ```
-### 4. Compile Protocol Buffer files
-```bash
-cd ~/hex_ws/src/hex_device_ros_wrapper/
-./build_proto.sh
-```
-### 5. Build
+### 3. Build
 ```bash
 cd ~/hex_ws
 colcon build

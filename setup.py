@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 from glob import glob
 
-package_name = 'hex_device_ros'
+package_name = 'hex_device_ros_wrapper'
 
 def get_files(tar: str, src: str):
     all_paths = glob(f'{src}/*')
@@ -36,11 +36,11 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            "arm_trans = hex_device_ros.arm_trans:main",
-            "chassis_trans = hex_device_ros.chassis_trans:main",
-            "chassis_key_control = hex_device_ros.chassis_key_control:main",
-            "pub_xmsg = hex_device_ros.pub_xmsg:main",
-            "hex_base_controller_ros = hex_device_ros.hex_base_controller_ros:main",
+            "arm_trans = hex_device_ros_wrapper.arm_trans:main",
+            "chassis_trans = hex_device_ros_wrapper.chassis_trans:main",
+            "chassis_key_control = hex_device_ros_wrapper.chassis_key_control:main",
+            "pub_xmsg = hex_device_ros_wrapper.pub_xmsg:main",
+            "hex_base_controller_ros = hex_device_ros_wrapper.hex_base_controller_ros:main",
         ],
     },
 )

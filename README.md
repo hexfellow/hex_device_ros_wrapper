@@ -1,4 +1,4 @@
-# hex_device_ros
+# hex_device_ros_wrapper
 
 ## Overview
 This is a ROS2 package that provides ROS interface for hex robotic devices, including robotic arms and mobile chassis now.
@@ -10,7 +10,7 @@ Create a workspace and download the package:
 mkdir -p ~/hex_ws/src
 cd ~/hex_ws/src
 git clone --recursive https://github.com/hexfellow/hex_bridge.git
-git clone --recursive https://github.com/hexfellow/hex_device_ros.git
+git clone --recursive https://github.com/hexfellow/hex_device_ros_wrapper.git
 git clone --recursive https://github.com/hexfellow/hex_device_msgs.git
 ```
 ### 2. install protoc
@@ -33,12 +33,12 @@ protoc --version  # Should show libprotoc 27.1
 ```
 ### 3. Install dependencies
 ```bash
-cd ~/hex_ws/src/hex_device_ros/
+cd ~/hex_ws/src/hex_device_ros_wrapper/
 python3 -m pip install -r requirements.txt
 ```
 ### 4. Compile Protocol Buffer files
 ```bash
-cd ~/hex_ws/src/hex_device_ros/
+cd ~/hex_ws/src/hex_device_ros_wrapper/
 ./build_proto.sh
 ```
 ### 5. Build
@@ -55,16 +55,16 @@ ros2 launch hex_bridge hex_bridge.launch.py url:={YOUR_IP}:8439
 Open another terminal and run:  
 If arm:
 ```bash
-ros2 launch hex_device_ros arm_bringup.launch.py
+ros2 launch hex_device_ros_wrapper arm_bringup.launch.py
 ```
 If chassis:
 ```bash
-ros2 launch hex_device_ros chassis_bringup.launch.py
+ros2 launch hex_device_ros_wrapper chassis_bringup.launch.py
 ```
 For chassis, you can also run following commands to control chassis with keyboard:  
 Open a new terminal and run:
 ```bash
-ros2 run hex_device_ros chassis_key_control
+ros2 run hex_device_ros_wrapper chassis_key_control
 ```
 
 ## Supported Devices
@@ -127,7 +127,7 @@ ros2 topic pub /xtopic_arm/joints_cmd hex_device_msgs/XmsgArmJointParamList "joi
 - {mode:'mit_mode', position: 0.5, velocity: 1.0, effort: 1.0, extra_param: '{\"mit_kp\": 1.0, \"mit_kd\": 0.5}'}'"
 ```
 For multiple joint control, just extend the list of commands.  
-Check `pub_xmsg.py` file in hex_device_ros package.
+Check `pub_xmsg.py` file in hex_device_ros_wrapper package.
 
 ---
 

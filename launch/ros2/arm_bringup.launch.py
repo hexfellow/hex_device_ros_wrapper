@@ -40,16 +40,16 @@ def generate_launch_description():
         description="Is KCP mode"
     )
 
-    joint_config = FindPackageShare('hex_device_ros').find(
-        'hex_device_ros') + '/config/joints.json'
+    joint_config = FindPackageShare('hex_device_ros_wrapper').find(
+        'hex_device_ros_wrapper') + '/config/joints.json'
     joint_config_path = DeclareLaunchArgument(
         'joint_config_path',
         default_value=joint_config,
         description='The path to the joint config file.'
     )
     
-    init_pose_file_path = FindPackageShare('hex_device_ros').find(
-        'hex_device_ros') + '/config/init_pos.json'
+    init_pose_file_path = FindPackageShare('hex_device_ros_wrapper').find(
+        'hex_device_ros_wrapper') + '/config/init_pos.json'
     init_pose_path = DeclareLaunchArgument(
         'init_pose_path',
         default_value=init_pose_file_path,
@@ -90,7 +90,7 @@ def generate_launch_description():
     )
 
     hex_arm_node = Node(
-        package='hex_device_ros',
+        package='hex_device_ros_wrapper',
         executable='arm_trans',
         name='hex_arm',
         output='screen',

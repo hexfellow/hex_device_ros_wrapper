@@ -1,4 +1,5 @@
 {
+    "name": "hex_arm",
     "joints": [
         {
             "joint_name": "joint_1",

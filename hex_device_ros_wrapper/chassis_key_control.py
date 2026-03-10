@@ -317,20 +317,20 @@ class PublishThread(threading.Thread):
             # Wait for a new message or timeout.
             self.condition.wait(self.timeout)
 
-            # Copy state into twist message.
-            twist.linear.x = self.x * self.speed
-            twist.linear.y = self.y * self.speed
-            twist.linear.z = self.z * self.speed
+            # Copy state into twist message (geometry_msgs requires Python float).
+            twist.linear.x = float(self.x * self.speed)
+            twist.linear.y = float(self.y * self.speed)
+            twist.linear.z = float(self.z * self.speed)
             twist.angular.x = 0.0
             twist.angular.y = 0.0
-            twist.angular.z = self.th * self.turn
+            twist.angular.z = float(self.th * self.turn)
 
             self.condition.release()
 
             # Publish.
             self.publisher.publish(twist_msg)
 
-        # Publish stop message when thread exits.
+        # Publish stop message when thread exits (ensure float for geometry_msgs).
         twist.linear.x = 0.0
         twist.linear.y = 0.0
         twist.linear.z = 0.0

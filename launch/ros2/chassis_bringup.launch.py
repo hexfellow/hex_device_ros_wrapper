@@ -72,7 +72,7 @@ def generate_launch_description():
     )
 
     hex_chassis_node = Node(
-        package='hex_device',
+        package='hex_device_ros_wrapper',
         executable='chassis_trans',
         name='hex_chassis',
         output='screen',

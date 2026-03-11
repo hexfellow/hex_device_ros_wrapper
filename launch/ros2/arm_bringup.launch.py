@@ -53,7 +53,7 @@ def generate_launch_description():
     init_pose_path = DeclareLaunchArgument(
         'init_pose_path',
         default_value=init_pose_file_path,
-        description='The path to the init pose file.'
+        description='The path to the init pose file. This file records the target joint positions of the robotic arm during initialization.'
     )
     
     gripper_type = DeclareLaunchArgument(

@@ -13,10 +13,12 @@ script_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(script_path)
 
 from ros_interface import DataInterface
-from hex_device_py import Hands, Arm, public_api_up_pb2, public_api_down_pb2, public_api_types_pb2, CommandType, Timestamp
 from std_msgs.msg import UInt8MultiArray
-from hex_device_msgs.msg import XmsgArmJointParamList
 from sensor_msgs.msg import JointState
+from hex_device_py import Hands, Arm, public_api_up_pb2, public_api_down_pb2, public_api_types_pb2, CommandType, Timestamp
+from hex_device_msgs.msg import XmsgArmJointParamList
+
+
 
 class ArmConfig:
     """Arm configuration: mapping arm type to motor count"""

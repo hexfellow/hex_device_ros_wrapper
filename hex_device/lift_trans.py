@@ -3,8 +3,13 @@ import threading
 import asyncio
 import signal
 
-from .ros_interface import DataInterface
-from .hex_device_py import linear_lift, zeta_lift , CommandType, public_api_up_pb2, public_api_down_pb2, public_api_types_pb2, Timestamp
+import os
+import sys
+script_path = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(script_path)
+
+from ros_interface import DataInterface
+from hex_device_py import linear_lift, zeta_lift , CommandType, public_api_up_pb2, public_api_down_pb2, public_api_types_pb2, Timestamp
 from std_msgs.msg import UInt8MultiArray
 from sensor_msgs.msg import JointState
 

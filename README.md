@@ -157,3 +157,18 @@ You can remap topics as needed in the launch file.
 | `simple_mode` | bool   | true        | Simple mode (cmd_vel) vs advanced (joint_cmd) |
 
 ---
+
+### 3. Lift
+Provides interface for hex Lift support.Only the RtIotaVc2 is supported now.
+
+#### Published Topics
+| Topic           | Msg Type                   | Description                 |
+| --------------- | -------------------------- | --------------------------- |
+| `/ws_down`      | `std_msgs/UInt8MultiArray` | Protobuf messages to device |
+| `/motor_states` | `sensor_msgs/JointState`   | Lift motor states (Only support position control)  |
+
+#### Subscribed Topics
+| Topic        | Msg Type                   | Description                      |
+| ------------ | -------------------------- | -------------------------------- |
+| `/ws_up`     | `std_msgs/UInt8MultiArray` | Protobuf messages from device    |
+| `/joint_cmd` | `sensor_msgs/JointState`   | Joint commands (Velocity represents the maximum movement speed. )          |

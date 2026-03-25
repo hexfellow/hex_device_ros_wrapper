@@ -9,7 +9,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Callable
 from typing import Optional, Tuple, List, Dict, Any, Union
-from ..hex_device_py import Arm, Hands, CommandType, MitMotorCommand, MotorBase
+from hex_device_py import Arm, Hands, CommandType, MitMotorCommand, MotorBase
 import traceback
 
 class InterfaceBase(ABC):

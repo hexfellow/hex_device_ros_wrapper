@@ -57,8 +57,10 @@ def generate_launch_description():
         executable='lift_trans',
         name='lift_trans',
         remappings=[
+            # subscribe
+            ('/xtopic_lift/joint_cmd', '/joint_cmd'),
             # publish
-            ('/xtopic_lift/joint_cmd', '/joint_cmd')
+            ('/xtopic_lift/motor_states', '/motor_states')
         ]
     )
     

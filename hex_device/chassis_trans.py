@@ -133,7 +133,8 @@ class HexChassisApi:
               self.chassis._update(api_up, Timestamp.from_ns(time.perf_counter_ns()))
               self._publish_odom()
               self._publish_motor_states()
-
+              
+    
     def _joint_cmd_callback(self, msg):
         if self.chassis is not None:
             if self.first_time:
@@ -192,6 +193,7 @@ class HexChassisApi:
             msg.velocity = motor_status['vel'].tolist()
             msg.effort = motor_status['eff'].tolist()
             self.ros_interface.publish(self.motor_states_pub, msg)
+            
 
 async def _run_with_cancellation(coro, stop_event, loop):
     """Wrapper to run coroutine and check for stop event"""

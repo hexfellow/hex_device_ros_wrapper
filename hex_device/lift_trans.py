@@ -1,4 +1,3 @@
-from enum import Enum
 import time
 import threading
 import asyncio
@@ -8,27 +7,16 @@ from .ros_interface import DataInterface
 from .hex_device_py import linear_lift, zeta_lift , CommandType, public_api_up_pb2, public_api_down_pb2, public_api_types_pb2, Timestamp
 from std_msgs.msg import UInt8MultiArray
 from sensor_msgs.msg import JointState
-from hex_device_msgs.msg import XmsgArmJointParamList
 
 import traceback
-
 
 class ClassLinearLiftApi:
     
     def __init__(self):
         
-        # ================== Get parameters =======================
-        # 限幅检查
-        
-        self._Lift_Max_position=0.6  # Unit: m
-        self._Lift_Min_position=0.1
-        
         self.ros_interface = DataInterface("xnode_lift")
         
         self._status = False
-        self._status_lock = threading.Lock()
-        
-        
         
         self.robot_type = None
         self.Lift = None
@@ -41,8 +29,6 @@ class ClassLinearLiftApi:
             'ws_up', UInt8MultiArray, self._ws_up_callback, 10)
         
         self.ws_down_pub = self.ros_interface.create_publisher('ws_down', UInt8MultiArray, 10)
-        
-        
         self.joint_cmd_sub = None
         
     async def _pub_ws_down(self, data):
@@ -68,7 +54,6 @@ class ClassLinearLiftApi:
     def _joint_cmd_callback(self, msg):
         try :
             msg.position = list(msg.position)
-            print(f"joint msg\n:{msg}")
                 
             if isinstance(self.Lift, linear_lift.LinearLift):
                 if len(msg.position) == 1:
@@ -135,21 +120,34 @@ class ClassLinearLiftApi:
                 self._joint_cmd_callback, 
                 10
             )
+            self.ros_interface.logi(f"Get ssid: {msg.session_id}")
 
 # ====== task ========
 def _run_async_thread(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
     
+def cleanup(api, loop, threads:list):
+    api.shutdown()
+    def stop_loop():
+        tasks = asyncio.all_tasks(loop)
 
+        for t in tasks:
+            t.cancel()
+
+        # 给任务一点时间处理 CancelledError
+        loop.call_later(0.1, loop.stop)
+    loop.call_soon_threadsafe(stop_loop)
+    
+    for thread_task in threads:
+        thread_task.join(timeout=2.0)
 
 # ========= Signal Handler =========
-def signal_handler(event,signum, frame):
+def signal_handler(signum, frame,event):
     if event.is_set():
         return
     print(f"\n[Signal] Interrupt received ({signum}), shutting down...")
     event.set()
-    raise KeyboardInterrupt
 
 
 def main():
@@ -164,24 +162,22 @@ def main():
     # ========= Setup Events =========
     shutdown_event = threading.Event()
     
-    signal.signal(signal.SIGINT, lambda s, f: signal_handler(shutdown_event, s, f))
-    signal.signal(signal.SIGTERM, lambda s, f: signal_handler(shutdown_event, s, f))
+    signal.signal(signal.SIGINT, lambda s, f: signal_handler(s, f, shutdown_event))
+    signal.signal(signal.SIGTERM, lambda s, f: signal_handler(s, f, shutdown_event))
     
     api = ClassLinearLiftApi()
     api._asnyc_loop = _asnyc_loop
     
     try:
         _asnyc_loop_thread.start()
-        
         shutdown_event.wait()
         
     except KeyboardInterrupt:
         pass
+    
     finally:
-        print("main finally")
-        api.ros_interface.shutdown()
-        _asnyc_loop.call_soon_threadsafe(_asnyc_loop.stop)
-        _asnyc_loop_thread.join(timeout=1.0)
+        cleanup(api.ros_interface,_asnyc_loop,[_asnyc_loop_thread])
+        api.ros_interface.logi("finally clean")
         
 
 if __name__ == '__main__':

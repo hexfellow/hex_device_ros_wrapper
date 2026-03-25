@@ -134,8 +134,7 @@ class HexChassisApi:
               self._publish_odom()
               self._publish_motor_states()
               
-            
-
+    
     def _joint_cmd_callback(self, msg):
         if self.chassis is not None:
             if self.first_time:

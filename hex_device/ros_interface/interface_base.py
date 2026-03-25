@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Callable
 from typing import Optional, Tuple, List, Dict, Any, Union
 from hex_device_py import Arm, Hands, CommandType, MitMotorCommand, MotorBase
-
+import traceback
 
 class InterfaceBase(ABC):
     """
@@ -267,6 +267,7 @@ class InterfaceBase(ABC):
             
         except Exception as e:
             self.loge(f"Error processing {device_name} joint command: {e}")
+            print(f"\n Error in motor_command:  \n {traceback.format_exc()}")
 
     def get_config_from_json(self, json_path: str) -> Optional[Dict]:
         try:

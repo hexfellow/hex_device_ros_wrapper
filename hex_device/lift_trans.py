@@ -17,6 +17,7 @@ class ClassLinearLiftApi:
         self.ros_interface = DataInterface("xnode_lift")
         
         self._status = False
+        self._stop_event = None
         
         self.robot_type = None
         self.Lift = None
@@ -45,8 +46,9 @@ class ClassLinearLiftApi:
         api_up.ParseFromString(bytes(msg.data))
         
         if self._status:
-            self.last_update_time = Timestamp.from_ns(time.perf_counter_ns())
-            self.Lift._update(api_up,self.last_update_time)
+            if self.Lift is not None:
+                self.last_update_time = Timestamp.from_ns(time.perf_counter_ns())
+                self.Lift._update(api_up,self.last_update_time)
         else:
             self._dev_init(api_up)
     
@@ -61,16 +63,17 @@ class ClassLinearLiftApi:
                 else:
                     self.ros_interface.logw("joint_callback waring: Position count != 1")
             
-            if isinstance(self.Lift, zeta_lift.ZetaLift):
-                if len(msg.position) == 3:
-                    self.Lift.motor_command(CommandType.POSITION,msg.position)
-                else:
-                    self.ros_interface.logw("joint_callback waring: Position count != 3")
+            # if isinstance(self.Lift, zeta_lift.ZetaLift):
+            #     if len(msg.position) == 3:
+            #         self.Lift.motor_command(CommandType.POSITION,msg.position)
+            #     else:
+            #         self.ros_interface.logw("joint_callback waring: Position count != 3")
                         
         except Exception:
             print(f"Error in linear_joint_cmd_callback:  \n {traceback.format_exc()}")
 
     # ====== device init ======
+    
     def _dev_init(self,msg):
         robot_type = msg.robot_type
         if robot_type not in zeta_lift.ZetaLift.SUPPORTED_ROBOT_TYPES and robot_type not in linear_lift.LinearLift.SUPPORTED_ROBOT_TYPES:
@@ -87,16 +90,19 @@ class ClassLinearLiftApi:
             )
             
         if msg.HasField("rotate_lift_status"):
-        
-            motor_status = msg.rotate_lift_status.motor_status
-            motor_counts = len(motor_status)
             
-            self.Lift = zeta_lift.ZetaLift(
-                motor_count=motor_counts,
-                robot_type=msg.robot_type,
+            self.ros_interface.logw("Zeta Lift is not supported yet.")
+            self.Lift = None
+            self._stop_event.set()
+            
+            # motor_status = msg.rotate_lift_status.motor_status
+            # motor_counts = len(motor_status)
+            # self.Lift = zeta_lift.ZetaLift(
+            #     motor_count=motor_counts,
+            #     robot_type=msg.robot_type,
                 
-                send_message_callback = self._pub_ws_down
-            )
+            #     send_message_callback = self._pub_ws_down
+            # )
 
         # ======== lift init ============
         if self.Lift is not None:
@@ -122,13 +128,16 @@ class ClassLinearLiftApi:
             )
             self.ros_interface.logi(f"Get ssid: {msg.session_id}")
 
+    def set_stop_event(self,event):
+        self._stop_event = event
+
 # ====== task ========
 def _run_async_thread(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
     
-def cleanup(api, loop, threads:list):
-    api.shutdown()
+def cleanup(ros_node, loop, threads:list):
+    ros_node.shutdown()
     def stop_loop():
         tasks = asyncio.all_tasks(loop)
 
@@ -149,7 +158,6 @@ def signal_handler(signum, frame,event):
     print(f"\n[Signal] Interrupt received ({signum}), shutting down...")
     event.set()
 
-
 def main():
     # ========= asnyc thread =========
     _asnyc_loop = asyncio.new_event_loop()
@@ -167,6 +175,7 @@ def main():
     
     api = ClassLinearLiftApi()
     api._asnyc_loop = _asnyc_loop
+    api.set_stop_event(shutdown_event)
     
     try:
         _asnyc_loop_thread.start()

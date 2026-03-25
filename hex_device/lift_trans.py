@@ -1,3 +1,4 @@
+from encodings.punycode import T
 import time
 import threading
 import asyncio
@@ -31,6 +32,7 @@ class ClassLinearLiftApi:
         
         self.ws_down_pub = self.ros_interface.create_publisher('ws_down', UInt8MultiArray, 10)
         self.joint_cmd_sub = None
+        self.motor_states_pub = None
         
     async def _pub_ws_down(self, data):
         """Unified ws_down publishing function, shared by all devices"""
@@ -49,6 +51,7 @@ class ClassLinearLiftApi:
             if self.Lift is not None:
                 self.last_update_time = Timestamp.from_ns(time.perf_counter_ns())
                 self.Lift._update(api_up,self.last_update_time)
+                self._publish_motor_states()
         else:
             self._dev_init(api_up)
     
@@ -71,6 +74,40 @@ class ClassLinearLiftApi:
                         
         except Exception:
             print(f"Error in linear_joint_cmd_callback:  \n {traceback.format_exc()}")
+
+    def _publish_motor_states(self):
+        try:
+            position_status =None
+            last_time = Timestamp.from_ns(int(time.perf_counter_ns()))
+            msg = None
+            
+            if self.Lift is not None :
+                if isinstance(self.Lift,linear_lift.LinearLift):
+                    position_status = self.Lift.get_motor_positions()
+                    msg = JointState()
+                    msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(last_time.s,last_time.ns)
+                    msg.name = [f"joint1"]
+                    msg.position = [position_status]
+                    msg.velocity = [0.0]
+                    msg.effort = [0.0]
+                    
+                # if isinstance(self.Lift,linear_lift.LinearLift):
+                #     msg = JointState()
+                #     msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(position_status['ts']['s'], position_status['ts']['ns'])
+                #     msg.name = [f"joint{i}" for i in range(len(position_status['pos']))]
+                #     msg.position = position_status['pos'].tolist()
+                #     msg.velocity = position_status['vel'].tolist()
+                #     msg.effort = position_status['eff'].tolist()
+            
+            if position_status is None:
+                self.ros_interface.logi("position_status is None")
+                return
+            
+            if msg is not None:
+                self.ros_interface.publish(self.motor_states_pub, msg)
+        
+        except Exception:
+            self.ros_interface.loge(f"Error in _publish_motor_states:  \n {traceback.format_exc()}")
 
     # ====== device init ======
     
@@ -126,6 +163,13 @@ class ClassLinearLiftApi:
                 self._joint_cmd_callback, 
                 10
             )
+            
+            self.motor_states_pub = self.ros_interface.create_publisher(
+                '/xtopic_lift/motor_states', 
+                JointState, 
+                10
+            )
+            
             self.ros_interface.logi(f"Get ssid: {msg.session_id}")
 
     def set_stop_event(self,event):

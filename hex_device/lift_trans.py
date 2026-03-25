@@ -1,4 +1,3 @@
-from encodings.punycode import T
 import time
 import threading
 import asyncio

@@ -83,11 +83,12 @@ class ClassLinearLiftApi:
             if self.Lift is not None :
                 if isinstance(self.Lift,linear_lift.LinearLift):
                     position_status = self.Lift.get_motor_positions()
+                    velocity_status = self.Lift.get_move_speed() / self.Lift._pulse_per_rotation
                     msg = JointState()
                     msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(last_time.s,last_time.ns)
                     msg.name = [f"joint1"]
                     msg.position = [position_status]
-                    msg.velocity = [0.0]
+                    msg.velocity = [velocity_status]
                     msg.effort = [0.0]
                     
                 # if isinstance(self.Lift,linear_lift.LinearLift):

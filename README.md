@@ -67,6 +67,16 @@ Open a new terminal and run:
 ros2 run hex_device chassis_key_control
 ```
 
+If lift:
+```bash
+ros2 launch hex_device lift_bringup.launch.py
+```
+For Lift, you can also run following commands to control Lift with simple pos command:  
+Open a new terminal and run:
+```bash
+ros2 topic pub /joint_states sensor_msgs/msg/JointState "{header: {}, name: ['joint1'], position: [0.3], velocity: [], effort: []}"
+```
+
 ## Supported Devices
 
 ### 1. Arm

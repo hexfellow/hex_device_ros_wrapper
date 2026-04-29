@@ -39,6 +39,8 @@ class HexChassisApi:
         self.ros_interface.set_parameter('cmd_vel_timeout', 0.5)
         self._cmd_vel_timeout = float(self.ros_interface.get_parameter('cmd_vel_timeout') or 0.5)
         self._last_cmd_vel_time = 0.0  # 0 = never received, then use timeout to stop
+        self.ros_interface.set_parameter('enable_ros_clock', True)
+        self.enable_ros_clock = self.ros_interface.get_parameter('enable_ros_clock')
 
         self.version_check = False
         self.first_time = True
@@ -153,7 +155,7 @@ class HexChassisApi:
         speed_x, speed_y, speed_z = speeds
         x, y, yaw = position
         msg = Odometry()
-        msg.header.stamp = self.ros_interface.get_timestamp()
+        msg.header.stamp = self._get_clock_timestamp()
         msg.header.frame_id = "odom"
         msg.child_frame_id = self.frame_id
         msg.pose.pose.position.x = x
@@ -177,13 +179,25 @@ class HexChassisApi:
         if motor_status is None:
             return
         msg = JointState()
-        msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(motor_status['ts']['s'], motor_status['ts']['ns'])
+        msg.header.stamp = self._get_clock_timestamp()
         msg.name = [f"joint{i}" for i in range(len(motor_status['pos']))]
         msg.position = motor_status['pos'].tolist()
         msg.velocity = motor_status['vel'].tolist()
         msg.effort = motor_status['eff'].tolist()
         self.ros_interface.publish(self.motor_states_pub, msg)
 
+# ========== tools ==========
+    def _get_clock_timestamp(self):
+        _timestamp = None
+        
+        device = self._get_chassis()
+
+        if self.enable_ros_clock == True:
+            _timestamp = self.ros_interface.get_timestamp()
+        elif self.enable_ros_clock == False:
+            _timestamp = self.ros_interface.get_timestamp_from_s_ns(device._last_update_time.s, device._last_update_time.ns)
+        
+        return _timestamp
 
 # ========== Main Function ==========
 

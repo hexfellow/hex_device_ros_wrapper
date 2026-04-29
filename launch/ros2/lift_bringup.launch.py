@@ -1,25 +1,20 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
-
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import IncludeLaunchDescription,DeclareLaunchArgument
 from launch.conditions import IfCondition
 
 def generate_launch_description():
-    # Declare the launch arguments
-
-    # Note: ROS2 launch does not provide control over node shutdown order.
-    # It is recommended to launch hex_bridge_node separately to ensure proper
-    # command forwarding during the shutdown phase and prevent premature termination
-    # of the bridge node that may cause shutdown commands to fail.
+    
     enable_bridge = DeclareLaunchArgument(
         'enable_bridge',
         default_value='false',
         description='Whether to enable the hex_bridge node, you can set it to false if you want to launch the node separately.'
     )
-
+    
     url = DeclareLaunchArgument(
         'url',
         default_value='0.0.0.0:8439',
@@ -29,7 +24,7 @@ def generate_launch_description():
     read_only = DeclareLaunchArgument(
         'read_only',
         default_value='false',
-        description='Whether to read only the chassis state.'
+        description='Whether to read only the arm state.'
     )
 
     is_kcp = DeclareLaunchArgument(
@@ -37,25 +32,15 @@ def generate_launch_description():
         default_value="true",
         description="Is KCP mode"
     )
-
-    frame_id = DeclareLaunchArgument(
-        'frame_id',
-        default_value='base_link',
-        description='Frame ID of the chassis.'
-    )
-
-    simple_mode = DeclareLaunchArgument(
-        'simple_mode',
-        default_value='true',
-        description='Simple mode of the chassis.'
-    )
     
     enable_ros_clock = DeclareLaunchArgument(
         "enable_ros_clock",
         default_value='true',
         description="Default to ROS clock source; use device internal clock if false."
     )
-
+    
+    # =========== launch ==============
+    
     # Define the node
     hex_bridge_node = Node(
         package='hex_bridge',
@@ -76,38 +61,32 @@ def generate_launch_description():
             ('/ws_up', '/ws_up')
         ]
     )
-
-    hex_chassis_node = Node(
+    
+    # ============= node =============== 
+    lift_node = Node(
         package='hex_device_ros_wrapper',
-        executable='chassis_trans',
-        name='hex_chassis',
-        output='screen',
-        emulate_tty=True,
+        executable='lift_trans',
+        name='lift_trans',
         parameters=[{
-            'frame_id': LaunchConfiguration('frame_id'),
-            'simple_mode': LaunchConfiguration('simple_mode'),
             'enable_ros_clock': LaunchConfiguration('enable_ros_clock'),
         }],
         remappings=[
             # subscribe
-            ('/xtopic_chassis/motor_states', '/motor_states'),
-            ('/xtopic_chassis/odom', '/odom'),
+            ('/xtopic_lift/joint_cmd', '/joint_cmd'),
             # publish
-            ('/xtopic_chassis/joint_cmd', '/joint_cmd'),
-            ('/xtopic_chassis/cmd_vel', '/cmd_vel'),
-            ('/xtopic_chassis/clear_err', '/clear_err')
+            ('/xtopic_lift/motor_states', '/motor_states')
         ]
     )
-
-    # Return the LaunchDescription
+    
     return LaunchDescription([
+        # parameter
         enable_bridge,
         url,
         read_only,
         is_kcp,
-        frame_id,
-        simple_mode,
         enable_ros_clock,
+        # launch
         hex_bridge_node,
-        hex_chassis_node
+        # node
+        lift_node
     ])

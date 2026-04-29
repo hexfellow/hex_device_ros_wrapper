@@ -33,6 +33,12 @@ def generate_launch_description():
         description="Is KCP mode"
     )
     
+    enable_ros_clock = DeclareLaunchArgument(
+        "enable_ros_clock",
+        default_value='true',
+        description="Default to ROS clock source; use device internal clock if false."
+    )
+    
     # =========== launch ==============
     
     bridge_launch = IncludeLaunchDescription(
@@ -56,6 +62,9 @@ def generate_launch_description():
         package='hex_device',
         executable='lift_trans',
         name='lift_trans',
+        parameters=[{
+            'enable_ros_clock': LaunchConfiguration('enable_ros_clock'),
+        }],
         remappings=[
             # subscribe
             ('/xtopic_lift/joint_cmd', '/joint_cmd'),
@@ -70,6 +79,7 @@ def generate_launch_description():
         url,
         read_only,
         is_kcp,
+        enable_ros_clock,
         # launch
         bridge_launch,
         # node

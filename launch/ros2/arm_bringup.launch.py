@@ -39,6 +39,12 @@ def generate_launch_description():
         default_value="true",
         description="Is KCP mode"
     )
+    
+    enable_ros_clock = DeclareLaunchArgument(
+        "enable_ros_clock",
+        default_value='true',
+        description="Default to ROS clock source; use device internal clock if false."
+    )
 
     joint_config = FindPackageShare('hex_device').find(
         'hex_device') + '/config/joints.json'
@@ -100,6 +106,7 @@ def generate_launch_description():
             'init_pose_path': LaunchConfiguration('init_pose_path'),
             'gripper_type': LaunchConfiguration('gripper_type'),
             'arm_series': LaunchConfiguration('arm_series'),
+            'enable_ros_clock': LaunchConfiguration('enable_ros_clock'),
         }],
         remappings=[
             ('/xtopic_arm/joints_cmd', '/joints_cmd'),
@@ -120,6 +127,7 @@ def generate_launch_description():
         init_pose_path,
         gripper_type,
         arm_series,
+        enable_ros_clock,
         # nodes
         hex_bridge_node,
         hex_arm_node

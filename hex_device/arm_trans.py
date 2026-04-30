@@ -62,6 +62,8 @@ class HexArmApi:
         joint_config_path = self.ros_interface.get_parameter('joint_config_path')
         self.ros_interface.set_parameter('init_pose_path', '')
         init_pose_path = self.ros_interface.get_parameter('init_pose_path')
+        self.ros_interface.set_parameter('enable_ros_clock', True)
+        self.enable_ros_clock = self.ros_interface.get_parameter('enable_ros_clock')
 
         # 4. Create Arm device
         self.arm = None
@@ -199,12 +201,13 @@ class HexArmApi:
 
     def _publish_joint_states(self):
         """Publish arm's joint states"""
+        _timestamp = self._get_clock_timestamp()
         if self.arm is not None and self.arm.has_new_data():
             motor_status = self.arm.get_simple_motor_status(pop=False)
             if motor_status is None:
                 return
             msg = JointState()
-            msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(motor_status['ts']['s'], motor_status['ts']['ns'])
+            msg.header.stamp = _timestamp
             msg.name = [f"joint{i}" for i in range(len(motor_status['pos']))]
             msg.position = motor_status['pos'].tolist()
             msg.velocity = motor_status['vel'].tolist()
@@ -220,18 +223,32 @@ class HexArmApi:
 
     def _publish_gripper_states(self):
         """Publish gripper states"""
+        _timestamp = self._get_clock_timestamp()
         if self.hands is not None and self.hands.has_new_data():
             motor_status = self.hands.get_simple_motor_status(pop=False)
             if motor_status is None:
                 return
             msg = JointState()
-            msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(motor_status['ts']['s'], motor_status['ts']['ns'])
+            msg.header.stamp = _timestamp
             msg.name = [f"gripper{i}" for i in range(len(motor_status['pos']))]
             msg.position = motor_status['pos'].tolist()
             msg.velocity = motor_status['vel'].tolist()
             msg.effort = motor_status['eff'].tolist()
             self.ros_interface.publish(self.gripper_states_pub, msg)
 
+    # ========== tool ==========
+        
+    def _get_clock_timestamp(self):
+        _timestamp = None
+        
+        device = self.arm
+
+        if self.enable_ros_clock == True:
+            _timestamp = self.ros_interface.get_timestamp()
+        elif self.enable_ros_clock == False:
+            _timestamp = self.ros_interface.get_timestamp_from_s_ns(device._last_update_time.s, device._last_update_time.ns)
+        return _timestamp
+    
 async def _run_with_cancellation(coro, stop_event, loop):
     """Wrapper to run coroutine and check for stop event"""
     task = asyncio.create_task(coro)

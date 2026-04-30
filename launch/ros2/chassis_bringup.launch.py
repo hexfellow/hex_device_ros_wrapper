@@ -49,6 +49,12 @@ def generate_launch_description():
         default_value='true',
         description='Simple mode of the chassis.'
     )
+    
+    enable_ros_clock = DeclareLaunchArgument(
+        "enable_ros_clock",
+        default_value='true',
+        description="Default to ROS clock source; use device internal clock if false."
+    )
 
     # Define the node
     hex_bridge_node = Node(
@@ -80,6 +86,7 @@ def generate_launch_description():
         parameters=[{
             'frame_id': LaunchConfiguration('frame_id'),
             'simple_mode': LaunchConfiguration('simple_mode'),
+            'enable_ros_clock': LaunchConfiguration('enable_ros_clock'),
         }],
         remappings=[
             # subscribe
@@ -100,6 +107,7 @@ def generate_launch_description():
         is_kcp,
         frame_id,
         simple_mode,
+        enable_ros_clock,
         hex_bridge_node,
         hex_chassis_node
     ])

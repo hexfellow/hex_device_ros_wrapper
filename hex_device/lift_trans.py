@@ -30,7 +30,11 @@ class ClassLinearLiftApi:
         self.last_update_time = Timestamp.from_ns(time.perf_counter_ns())
         self._asnyc_loop = None
         
-         # ============ Subscribers & Publishers ============
+        # Get parameters
+        self.ros_interface.set_parameter('enable_ros_clock', True)
+        self.enable_ros_clock = self.ros_interface.get_parameter('enable_ros_clock')
+        
+        # ============ Subscribers & Publishers ============
         self.ws_up_sub = self.ros_interface.create_subscription(
             'ws_up', UInt8MultiArray, self._ws_up_callback, 10)
         
@@ -69,12 +73,6 @@ class ClassLinearLiftApi:
                     self.Lift.motor_command(CommandType.POSITION,msg.position[0])
                 else:
                     self.ros_interface.logw("joint_callback waring: Position count != 1")
-            
-            # if isinstance(self.Lift, zeta_lift.ZetaLift):
-            #     if len(msg.position) == 3:
-            #         self.Lift.motor_command(CommandType.POSITION,msg.position)
-            #     else:
-            #         self.ros_interface.logw("joint_callback waring: Position count != 3")
                         
         except Exception:
             print(f"Error in linear_joint_cmd_callback:  \n {traceback.format_exc()}")
@@ -82,27 +80,19 @@ class ClassLinearLiftApi:
     def _publish_motor_states(self):
         try:
             position_status =None
-            last_time = Timestamp.from_ns(int(time.perf_counter_ns()))
             msg = None
             
             if self.Lift is not None :
                 if isinstance(self.Lift,linear_lift.LinearLift):
+                    _timestamp = self._get_clock_timestamp()
                     position_status = self.Lift.get_motor_positions()
                     velocity_status = self.Lift.get_move_speed() / self.Lift._pulse_per_rotation
                     msg = JointState()
-                    msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(last_time.s,last_time.ns)
+                    msg.header.stamp = _timestamp
                     msg.name = [f"joint1"]
                     msg.position = [position_status]
                     msg.velocity = [velocity_status]
                     msg.effort = [0.0]
-                    
-                # if isinstance(self.Lift,linear_lift.LinearLift):
-                #     msg = JointState()
-                #     msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(position_status['ts']['s'], position_status['ts']['ns'])
-                #     msg.name = [f"joint{i}" for i in range(len(position_status['pos']))]
-                #     msg.position = position_status['pos'].tolist()
-                #     msg.velocity = position_status['vel'].tolist()
-                #     msg.effort = position_status['eff'].tolist()
             
             if position_status is None:
                 self.ros_interface.logi("position_status is None")
@@ -179,6 +169,21 @@ class ClassLinearLiftApi:
 
     def set_stop_event(self,event):
         self._stop_event = event
+        
+    # ========== tool ==========
+        
+    def _get_clock_timestamp(self):
+        _timestamp = None
+        
+        device = self.Lift
+
+        if self.enable_ros_clock == True:
+            _timestamp = self.ros_interface.get_timestamp()
+            
+        elif self.enable_ros_clock == False:
+            _timestamp = self.ros_interface.get_timestamp_from_s_ns(device._last_update_time.s, device._last_update_time.ns)
+        
+        return _timestamp
 
 # ====== task ========
 def _run_async_thread(loop):

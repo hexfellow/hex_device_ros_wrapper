@@ -59,13 +59,14 @@ class HexArmApi:
         self.arm = None
         self.hands = None
 
-        # 3. Create shared topics (ws_down, ws_up)
+        # 3. Init HexDeviceApi
+        self.api = HexDeviceApi(control_hz=500, send_down_callback=self._pub_ws_down)
+        hex_device.set_log_level("WARNING")
+
+        # 4. Create shared topics (ws_down, ws_up)
         self.ws_down_pub = self.ros_interface.create_publisher('ws_down', UInt8MultiArray, 10)
         self.ws_up_sub = self.ros_interface.create_subscription(
             'ws_up', UInt8MultiArray, self._ws_up_callback, 10)
-        # 4. Init HexDeviceApi
-        self.api = HexDeviceApi(control_hz=500, send_down_callback=self._pub_ws_down)
-        hex_device.set_log_level("WARNING")
 
     def _check_cmd_timeout(self, arm):
         """When no cmd_vel for timeout seconds, stop chassis (watchdog)."""

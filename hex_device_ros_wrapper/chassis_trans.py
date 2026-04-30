@@ -43,7 +43,11 @@ class HexChassisApi:
         self.version_check = False
         self.first_time = True
 
-        # 3. Create shared topics (ws_down, ws_up)
+        # 3. Init HexDeviceApi
+        self.api = HexDeviceApi(control_hz=500, send_down_callback=self._pub_ws_down)
+        # time.sleep(1)
+
+        # 4. Create shared topics (ws_down, ws_up)
         self.ws_down_pub = self.ros_interface.create_publisher('ws_down', UInt8MultiArray, 10)
         self.ws_up_sub = self.ros_interface.create_subscription(
             'ws_up', UInt8MultiArray, self._ws_up_callback, 10)
@@ -55,8 +59,6 @@ class HexChassisApi:
         self.cmd_vel_sub = None
         self.clear_err_sub = None
 
-        # 4. Init HexDeviceApi
-        self.api = HexDeviceApi(control_hz=500, send_down_callback=self._pub_ws_down)
 
     # ========== Common topic callbacks ==========
 
@@ -189,6 +191,42 @@ class HexChassisApi:
 
 def main():
     hex_chassis_api = HexChassisApi()
+
+    # Wait for chassis device to appear (up to 30 seconds)
+    chassis = None
+    startup_timeout = 30.0
+    startup_start = time.time()
+    last_log_time = 0.0
+
+    while hex_chassis_api.ros_interface.ok() and not hex_chassis_api.api.is_api_exit():
+        chassis_list = hex_chassis_api.api.device_list
+        for device in chassis_list:
+            if isinstance(device, Chassis):
+                chassis = device
+                break
+
+        if chassis is not None:
+            hex_chassis_api.ros_interface.logi("Chassis device discovered")
+            break
+
+        elapsed = time.time() - startup_start
+        if elapsed > startup_timeout:
+            hex_chassis_api.ros_interface.loge(
+                f"No chassis device detected within {startup_timeout:.0f}s. "
+                "Check that hex_bridge is running and the robot is connected."
+            )
+            hex_chassis_api.api.close()
+            hex_chassis_api.ros_interface.shutdown()
+            exit(1)
+
+        # Log waiting status every 3 seconds
+        if elapsed - last_log_time >= 3.0:
+            last_log_time = elapsed
+            hex_chassis_api.ros_interface.logi(
+                f"Waiting for chassis device... ({elapsed:.0f}s elapsed)"
+            )
+
+        time.sleep(0.5)
 
     try:
         while True:

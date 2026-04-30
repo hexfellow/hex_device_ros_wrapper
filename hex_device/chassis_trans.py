@@ -45,6 +45,11 @@ class HexChassisApi:
         
         self.chassis = None
         self.init_state = InitState.PENDING
+        
+        
+        # Get parameters
+        self.ros_interface.set_parameter('enable_ros_clock', True)
+        self.enable_ros_clock = self.ros_interface.get_parameter('enable_ros_clock')
 
         self.joint_cmd_sub = None
         self.cmd_vel_sub = None
@@ -156,14 +161,14 @@ class HexChassisApi:
     def _publish_odom(self):
         if self.chassis is not None and self.chassis.has_new_data():
             msg = Odometry()
-            msg.header.stamp = self.ros_interface.get_timestamp()
+            msg.header.stamp = self._get_clock_timestamp()
             msg.header.frame_id = "odom"
             msg.child_frame_id = self.frame_id
-            speeds= self.chassis.get_vehicle_speed()
+            speeds= self.chassis.get_vehicle_speed(pop=False)
             if speeds is None:
                 return
             speed_x, speed_y, speed_z = speeds
-            position = self.chassis.get_vehicle_position()
+            position = self.chassis.get_vehicle_position(pop=False)
             if position is None:
                 return
             x, y, yaw = position
@@ -182,19 +187,34 @@ class HexChassisApi:
             self.ros_interface.publish(self.odom_pub, msg)
 
     def _publish_motor_states(self):
+        _timestamp = self._get_clock_timestamp()
         if self.chassis is not None and self.chassis.has_new_data():
-            motor_status = self.chassis.get_simple_motor_status()
+            motor_status = self.chassis.get_simple_motor_status(pop=False)
             if motor_status is None:
                 return
             msg = JointState()
-            msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(motor_status['ts']['s'], motor_status['ts']['ns'])
+            msg.header.stamp = _timestamp
             msg.name = [f"joint{i}" for i in range(len(motor_status['pos']))]
             msg.position = motor_status['pos'].tolist()
             msg.velocity = motor_status['vel'].tolist()
             msg.effort = motor_status['eff'].tolist()
             self.ros_interface.publish(self.motor_states_pub, msg)
             
+    # ========== tool ==========
+        
+    def _get_clock_timestamp(self):
+        _timestamp = None
+        
+        device = self.chassis
 
+        if self.enable_ros_clock == True:
+            _timestamp = self.ros_interface.get_timestamp()
+        elif self.enable_ros_clock == False:
+            _timestamp = self.ros_interface.get_timestamp_from_s_ns(device._last_update_time.s, device._last_update_time.ns)
+        
+        return _timestamp
+    
+    
 async def _run_with_cancellation(coro, stop_event, loop):
     """Wrapper to run coroutine and check for stop event"""
     task = asyncio.create_task(coro)

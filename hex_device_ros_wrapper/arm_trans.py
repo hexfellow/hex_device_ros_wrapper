@@ -18,7 +18,7 @@ sys.path.append(script_path)
 
 from ros_interface import DataInterface
 import hex_device
-from hex_device import HexDeviceApi, public_api_up_pb2
+from hex_device import HexDeviceApi, public_api_up_pb2, Arm
 from hex_device.motor_base import CommandType
 
 from std_msgs.msg import UInt8MultiArray
@@ -51,6 +51,9 @@ class HexArmApi:
         self.joint_config_path = self.ros_interface.get_parameter('joint_config_path')
         self.ros_interface.set_parameter('init_pose_path', '')
         init_pose_path = self.ros_interface.get_parameter('init_pose_path')
+        self.ros_interface.set_parameter('enable_ros_clock', True)
+        self.enable_ros_clock = self.ros_interface.get_parameter('enable_ros_clock')
+        
         # load auto init position
         if init_pose_path is not None:
             self.init_pos = self.ros_interface.get_init_pos_config(init_pose_path)
@@ -69,7 +72,7 @@ class HexArmApi:
             'ws_up', UInt8MultiArray, self._ws_up_callback, 10)
 
     def _check_cmd_timeout(self, arm):
-        """When no cmd_vel for timeout seconds, stop chassis (watchdog)."""
+        """When no cmd_vel for timeout seconds, stop arm (watchdog)."""
         if arm.is_timeout():
             now = time.monotonic()
             if now - self._last_arm_timeout_log >= 5.0:
@@ -106,6 +109,14 @@ class HexArmApi:
                 10
             )
 
+    def _get_arm(self):
+        if self.arm is None:
+            for device in self.api.device_list:
+                if isinstance(device, Arm):
+                    self.arm = device
+                    return self.arm
+        return self.arm
+    
     # ========== Common topic callbacks ==========
     def _pub_ws_down(self, data):
         try:
@@ -141,12 +152,14 @@ class HexArmApi:
     def _publish_joint_states(self):
         """Publish arm's joint states"""
         if self.arm is not None:
+            timestamps = self._get_clock_timestamp()
+            
             motor_status = self.arm.get_simple_motor_status(pop=False)
             if motor_status is None:
                 return
             try:
                 msg = JointState()
-                msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(motor_status['ts']['s'], motor_status['ts']['ns'])
+                msg.header.stamp = timestamps
                 msg.name = [f"joint{i}" for i in range(len(motor_status['pos']))]
                 msg.position = motor_status['pos'].tolist()
                 msg.velocity = motor_status['vel'].tolist()
@@ -164,12 +177,13 @@ class HexArmApi:
     def _publish_gripper_states(self):
         """Publish gripper states"""
         if self.hands is not None:
+            timestamps = self._get_clock_timestamp()
             motor_status = self.hands.get_simple_motor_status(pop=False)
             if motor_status is None:
                 return
             try:
                 msg = JointState()
-                msg.header.stamp = self.ros_interface.get_timestamp_from_s_ns(motor_status['ts']['s'], motor_status['ts']['ns'])
+                msg.header.stamp = timestamps
                 msg.name = [f"gripper{i}" for i in range(len(motor_status['pos']))]
                 msg.position = motor_status['pos'].tolist()
                 msg.velocity = motor_status['vel'].tolist()
@@ -177,6 +191,22 @@ class HexArmApi:
                 self.ros_interface.publish(self.gripper_states_pub, msg)
             except Exception as e:
                 self.ros_interface.loge(f"Error publishing gripper states: {e}")
+                
+    # ========== tool ==========
+        
+    def _get_clock_timestamp(self):
+        _timestamp = None
+        
+        device = self._get_arm()
+
+        if self.enable_ros_clock == True:
+            _timestamp = self.ros_interface.get_timestamp()
+        elif self.enable_ros_clock == False:
+            _timestamp = self.ros_interface.get_timestamp_from_s_ns(device._last_update_time.s, device._last_update_time.ns)
+
+        return _timestamp
+    
+
 
 def signal_handler(signum, frame, hex_arm_api):
     """Custom signal handler for graceful shutdown"""

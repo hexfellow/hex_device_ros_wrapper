@@ -38,6 +38,7 @@ setup(
         'console_scripts': [
             "arm_trans = hex_device_ros_wrapper.arm_trans:main",
             "chassis_trans = hex_device_ros_wrapper.chassis_trans:main",
+            "lift_trans = hex_device_ros_wrapper.lift_trans:main",
             "chassis_key_control = hex_device_ros_wrapper.chassis_key_control:main",
             "pub_xmsg = hex_device_ros_wrapper.pub_xmsg:main",
         ],

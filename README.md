@@ -9,9 +9,9 @@ Create a workspace and download the package:
 ```bash
 mkdir -p ~/hex_ws/src
 cd ~/hex_ws/src
-git clone --recursive https://github.com/hexfellow/hex_bridge.git
-git clone --recursive https://github.com/hexfellow/hex_device.git
-git clone --recursive https://github.com/hexfellow/hex_device_msgs.git
+git clone --recursive -b 1.3 https://github.com/hexfellow/hex_bridge.git
+git clone --recursive -b 1.3 https://github.com/hexfellow/hex_device.git
+git clone --recursive -b 1.3 https://github.com/hexfellow/hex_device_msgs.git
 ```
 ### 2. install protoc
 > If you are using Higher Ubuntu Release, likely your package manager has already installed `protoc`. As long as version is higher than 27.1, you can skip this step.

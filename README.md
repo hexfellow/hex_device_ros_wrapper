@@ -13,18 +13,38 @@ git clone --recursive https://github.com/hexfellow/hex_bridge.git
 git clone --recursive https://github.com/hexfellow/hex_device_ros_wrapper.git
 git clone --recursive https://github.com/hexfellow/hex_device_msgs.git
 ```
-### 2. Install dependencies
+### 2. Install protoc
+> If you are using a higher Ubuntu release, your package manager may have already installed `protoc`. As long as the version is higher than 27.1, you can skip this step.
+
+Just choose a suitable version and install it. Below is an example of installing `protoc-27.1`.
+
+```bash
+# For Linux x86_64
+wget https://github.com/protocolbuffers/protobuf/releases/download/v27.1/protoc-27.1-linux-x86_64.zip
+sudo unzip protoc-27.1-linux-x86_64.zip -d /usr/local
+rm protoc-27.1-linux-x86_64.zip
+
+# For Linux arm64
+wget https://github.com/protocolbuffers/protobuf/releases/download/v27.1/protoc-27.1-linux-aarch_64.zip
+sudo unzip protoc-27.1-linux-aarch_64.zip -d /usr/local
+rm protoc-27.1-linux-aarch_64.zip
+
+# Verify installation
+protoc --version  # Should show libprotoc 27.1
+```
+
+### 3. Install dependencies
 ```bash
 cd ~/hex_ws/src/hex_device_ros_wrapper/
 python3 -m pip install -r requirements.txt
 ```
-### 3. Build
+### 4. Build
 ```bash
 cd ~/hex_ws
 colcon build
 source install/setup.bash
 ```
-### 4. Usage
+### 5. Usage
 Open a new terminal and run:
 ```bash
 ros2 launch hex_bridge hex_bridge.launch.py url:={YOUR_IP}:8439
@@ -45,17 +65,26 @@ ros2 run hex_device_ros_wrapper chassis_key_control
 ```
 
 If lift:
-```
+```bash
 ros2 launch hex_device_ros_wrapper lift_bringup.launch.py
 ```
 For Lift, you can also run following commands to control Lift with simple pos command:
 Open a new terminal and run:
 
-```
+```bash
 ros2 topic pub /joint_cmd sensor_msgs/msg/JointState "{header: {}, name: ['joint1'], position: [0.3], velocity: [], effort: []}" --once
 ```
 
-### 5.Parameter
+If chassis and lift together (with independent bridge connections and namespaced topics):
+```bash
+ros2 launch hex_device_ros_wrapper multi_bringup.launch.py \
+  enable_chassis_bridge:=true enable_lift_bridge:=true \
+  chassis_url:=192.168.1.100:8439 lift_url:=192.168.1.101:8439
+```
+> When using `multi_bringup`, topics are isolated under `/chassis/` and `/lift/` namespaces
+> (e.g. `/chassis/cmd_vel`, `/chassis/motor_states`, `/lift/joint_cmd`, `/lift/motor_states`).
+
+### 6. Parameter
 **Clock Source Configuration**
 
 You can use the `enable_ros_clock` parameter to decide whether to use the ROS clock as the message timestamp.
@@ -116,12 +145,12 @@ ros2 topic pub /joints_cmd hex_device_msgs/XmsgArmJointParamList "joints:
 ```
 Open the brake when the joint is in position_mode:
 ```bash
-ros2 topic pub /xtopic_arm/joints_cmd hex_device_msgs/XmsgArmJointParamList "joints:
+ros2 topic pub /joints_cmd hex_device_msgs/XmsgArmJointParamList "joints:
 - {mode: 'position_mode', position: 0.5, velocity: 1.0, effort: 1.0, extra_param: '{\"brake\": true}'}'"
 ```
 Control a joint with the control mode set to mit_mode, joint angle of 0.5 radians, velocity of 1.0 radians per second, torque of 1.0 Newtons, and additional parameters: kp=1.0, kd=0.5:
 ```bash
-ros2 topic pub /xtopic_arm/joints_cmd hex_device_msgs/XmsgArmJointParamList "joints:
+ros2 topic pub /joints_cmd hex_device_msgs/XmsgArmJointParamList "joints:
 - {mode:'mit_mode', position: 0.5, velocity: 1.0, effort: 1.0, extra_param: '{\"mit_kp\": 1.0, \"mit_kd\": 0.5}'}'"
 ```
 For multiple joint control, just extend the list of commands.  

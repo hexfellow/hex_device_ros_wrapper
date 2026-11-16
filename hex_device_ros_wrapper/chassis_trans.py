@@ -122,7 +122,7 @@ class HexChassisApi:
         chassis = self._get_chassis()
         if chassis is not None:
             chassis.start()
-            chassis.motor_command(CommandType.SPEED, msg.velocity)
+            chassis.motor_command(CommandType.SPEED, list(msg.velocity))
 
     def _cmd_vel_callback(self, msg):
         try:
